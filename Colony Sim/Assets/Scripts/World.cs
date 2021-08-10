@@ -4,12 +4,17 @@ using UnityEngine;
 
 public class World : MonoBehaviour {
 
+    public int seed;
+
     public Material chunkMaterial;
 
     public Chunk[,] chunks = new Chunk[VoxelData.WorldSizeInChunks, VoxelData.WorldSizeInChunks];
     public Block[] blocks;
 
     private void Start() {
+
+        Random.InitState(seed);
+
         GenerateWorld();
     }
 
@@ -21,15 +26,32 @@ public class World : MonoBehaviour {
         }
     }
 
-    public byte GetFreshVoxel(Vector3Int voxelPosition) {
+    public byte GetFreshVoxel(Vector3Int pos) {
 
-        if (voxelPosition.y < VoxelData.ChunkHeight / 3)
+        int yPos = Mathf.FloorToInt(pos.y);
+
+        /* */
+        //If bottom of chunk
+
+        if (yPos == 0)
             return 1;
-        else if (voxelPosition.y < VoxelData.ChunkHeight / 2)
-            return 0;
-        else
-            return 2;
 
+        /* BASIC TERRAIN PASS */
+
+        int terrainHeight = Mathf.FloorToInt(VoxelData.ChunkHeight * Noise.Get2DPerlin(new Vector2(pos.x, pos.z), 500, .25f));
+        byte voxelValue = 0;
+
+        if (yPos == terrainHeight)
+            voxelValue = 0;
+        else if (yPos < terrainHeight && yPos > terrainHeight - 4)
+            voxelValue = 0;
+        else if (yPos > terrainHeight)
+            return 2;
+        else
+            voxelValue = 1;
+
+
+        return voxelValue;
     }
 
     public bool CheckForSolidVoxel(Vector3Int position) {
